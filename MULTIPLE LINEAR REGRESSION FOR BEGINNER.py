@@ -12,6 +12,7 @@ from sklearn.linear_model import LinearRegression
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 import seaborn as sb
+from numpy.linalg import inv
 
 
 # ##### LOAD RAW DATA TO DATAFRAME
@@ -60,13 +61,13 @@ df.describe(exclude=['O'])
 df.isnull().sum()
 
 
-# In[10]:
+# In[9]:
 
 
 print (df.shape)
 
 
-# In[12]:
+# In[10]:
 
 
 #Lets see what percentage of each column has null values
@@ -75,33 +76,33 @@ print (df.shape)
 print (df.isnull().sum()/df.shape[0] * 100)
 
 
-# In[13]:
+# In[11]:
 
 
 cols = [col for col in df.columns if (df[col].isnull().sum()/df.shape[0] * 100 < 100)]
 cols
 
 
-# In[16]:
+# In[12]:
 
 
 df = df[cols]
 print ('Legitimate columns after dropping null columns: %s' % df.shape[1])
 
 
-# In[17]:
+# In[13]:
 
 
 df.isnull().sum()
 
 
-# In[18]:
+# In[14]:
 
 
 df.dtypes
 
 
-# In[19]:
+# In[15]:
 
 
 #Looks like some columns needs to be converted to numeric field
@@ -114,7 +115,7 @@ df['SNF'] = pd.to_numeric(df['SNF'], errors='coerce')
 df['TSHDSBRSGF'] = pd.to_numeric(df['TSHDSBRSGF'], errors='coerce')
 
 
-# In[20]:
+# In[16]:
 
 
 #Fill remaining null values. FOr the moment lts perform ffill
@@ -124,13 +125,13 @@ df.fillna(method='bfill', inplace=True)
 df.isnull().sum()
 
 
-# In[21]:
+# In[17]:
 
 
 df.dtypes
 
 
-# In[24]:
+# In[18]:
 
 
 #Plot couple of columns to see how the data is scaled
@@ -152,14 +153,14 @@ sb.distplot(df['MAX'], ax=ax[3][0])
 
 # #### CORRELATION
 
-# In[25]:
+# In[19]:
 
 
 pearsoncorr = df.corr(method='pearson')
 pearsoncorr
 
 
-# In[51]:
+# In[20]:
 
 
 plt.figure(figsize=(12, 10))
@@ -174,7 +175,7 @@ sb.heatmap(pearsoncorr,
            linewidth = 1)
 
 
-# In[28]:
+# In[21]:
 
 
 df.SND.value_counts()
@@ -184,7 +185,7 @@ df.SND.value_counts()
 # ##### Independent variables: DR, PGT
 # ##### Dependent variables: WindGustSpd
 
-# In[52]:
+# In[22]:
 
 
 lr = LinearRegression()
@@ -193,32 +194,32 @@ x = df[['DR','PGT']] # here we have 2 variables for multiple regression
 x
 
 
-# In[53]:
+# In[23]:
 
 
 x.shape
 
 
-# In[54]:
+# In[24]:
 
 
 y = df.WindGustSpd.values.reshape(-1,1)
 y
 
 
-# In[55]:
+# In[25]:
 
 
 y.shape
 
 
-# In[56]:
+# In[26]:
 
 
 lr.fit(x,y)
 
 
-# In[57]:
+# In[27]:
 
 
 from sklearn.model_selection import train_test_split
@@ -231,51 +232,109 @@ a = lr.predict(x_test)
 a
 
 
-# In[58]:
+# In[28]:
 
 
 mean_absolute_error(a,y_test)
 
 
-# In[59]:
+# In[29]:
 
 
 x = sm.add_constant(x) # adding a constant
 x
 
 
-# In[60]:
+# In[30]:
 
 
 model = sm.OLS(y, x).fit()
 model
 
 
-# In[61]:
+# In[31]:
 
 
 predictions = model.predict(x) 
 predictions
 
 
-# In[62]:
+# In[32]:
 
 
 print(model.summary())
+
+
+# ##### MANUALLY
+
+# In[33]:
+
+
+data1 = df[['DR','PGT','WindGustSpd']]
+data1
+
+
+# In[34]:
+
+
+#convert dataframe to numpy matrix
+dataM = data1.as_matrix()
+dataM
+
+
+# In[35]:
+
+
+X_manual, y_manual = dataM[:,[1,2]], dataM[:,0]
+
+
+# In[37]:
+
+
+x0 = np.ones((len(X_manual), 1), dtype=int)
+x0
+
+
+# In[38]:
+
+
+x_manual = np.concatenate((x0, X_manual), axis=1)
+x_manual
+
+
+# In[40]:
+
+
+b = inv(x_manual.T.dot(x_manual)).dot(x_manual.T).dot(y_manual)
+b
+
+
+# In[41]:
+
+
+yhat = x_manual.dot(b)
+yhat
+
+
+# In[44]:
+
+
+error = y_manual-yhat
+error
 
 
 # #### MODEL 2
 # ##### Independent variables: DR, TSHDSBRSGF
 # ##### Dependent variables: WindGustSpd
 
-# In[63]:
+# In[45]:
 
 
 x2 = df[['DR','TSHDSBRSGF']]
 x2
 
 
-# In[65]:
+# In[46]:
 
 
 lr.fit(x2,y)
@@ -287,34 +346,34 @@ a2 = lr.predict(x2_test)
 a2
 
 
-# In[66]:
+# In[47]:
 
 
 mean_absolute_error(a2,y2_test)
 
 
-# In[67]:
+# In[48]:
 
 
 x2 = sm.add_constant(x2) # adding a constant
 x2
 
 
-# In[68]:
+# In[49]:
 
 
 model2 = sm.OLS(y, x2).fit()
 model2
 
 
-# In[69]:
+# In[50]:
 
 
 predictions2 = model.predict(x2) 
 predictions2
 
 
-# In[70]:
+# In[51]:
 
 
 print(model2.summary())
