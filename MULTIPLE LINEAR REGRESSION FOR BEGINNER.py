@@ -3,7 +3,7 @@
 
 # ##### IMPORT LIBRARY
 
-# In[1]:
+# In[227]:
 
 
 import numpy as np 
@@ -14,54 +14,59 @@ import matplotlib.pyplot as plt
 import seaborn as sb
 from numpy.linalg import inv
 import scipy.stats as stats
+import os
+import random 
+import math
 
 
 # ##### LOAD RAW DATA TO DATAFRAME
 
-# In[2]:
+# In[228]:
 
 
-df = pd.read_csv(r"C:\Users\Lenovo\Documents\1 PT Pos Indonesia (Persero)\KERJA\5 Training Rosebay\Regression\Data dari Kaggle\Summary of Weather.csv")
+# Load data
+os.chdir("D://FILE//konsultan l//learning and predict//weatherww2a//")
+df = pd.read_csv('Summary of Weather.csv', delimiter=",")
 
 
-# In[3]:
+# In[229]:
 
 
 df.head()
 
 
-# In[4]:
+# In[230]:
 
 
 df.info()
 
 
-# In[5]:
+# In[231]:
 
 
 df.describe()
 
 
-# In[6]:
+# In[232]:
 
 
 df.describe(include=['O'])
 
 
-# In[7]:
+# In[233]:
 
 
 df.describe(exclude=['O'])
 
 
-# In[8]:
+# In[234]:
 
 
 pearsoncorr_raw = df.corr(method='pearson')
 pearsoncorr_raw
 
 
-# In[9]:
+# In[235]:
 
 
 plt.figure(figsize=(12, 10))
@@ -76,21 +81,21 @@ sb.heatmap(pearsoncorr_raw,
            linewidth = 1)
 
 
-# In[10]:
+# In[236]:
 
 
 plt.plot(df.DR, df.WindGustSpd, 'o', color='magenta');
 plt.title("Checking Linear Relationship")
 
 
-# In[11]:
+# In[237]:
 
 
 plt.plot(df.MIN, df.MinTemp, 'o', color='magenta');
 plt.title("Checking Linear Relationship")
 
 
-# In[12]:
+# In[238]:
 
 
 plt.plot(df.MaxTemp, df.MinTemp, 'o', color='magenta');
@@ -99,7 +104,7 @@ plt.title("Checking Linear Relationship")
 ### YEAY LINEAR !!!!!!!!!
 
 
-# In[13]:
+# In[239]:
 
 
 plt.plot(df.MIN, df.MaxTemp, 'o', color='magenta');
@@ -108,14 +113,14 @@ plt.title("Checking Linear Relationship")
 ### YEAY LINEAR !!!!!!!!!
 
 
-# In[14]:
+# In[240]:
 
 
 plt.plot(df.MIN, df.WindGustSpd, 'o', color='magenta');
 plt.title("Checking Linear Relationship")
 
 
-# In[15]:
+# In[241]:
 
 
 df.MIN.unique()
@@ -126,19 +131,19 @@ df.MIN.unique()
 
 # ##### DATA CLEANING
 
-# In[16]:
+# In[242]:
 
 
 df.isnull().sum()
 
 
-# In[17]:
+# In[243]:
 
 
 print (df.shape)
 
 
-# In[18]:
+# In[244]:
 
 
 #Lets see what percentage of each column has null values
@@ -147,33 +152,33 @@ print (df.shape)
 print (df.isnull().sum()/df.shape[0] * 100)
 
 
-# In[19]:
+# In[245]:
 
 
 cols = [col for col in df.columns if (df[col].isnull().sum()/df.shape[0] * 100 < 100)]
 cols
 
 
-# In[20]:
+# In[246]:
 
 
 df_new = df[cols]
 print ('Legitimate columns after dropping null columns: %s' % df_new.shape[1])
 
 
-# In[21]:
+# In[247]:
 
 
 df_new.isnull().sum()
 
 
-# In[22]:
+# In[248]:
 
 
 df_new.dtypes
 
 
-# In[23]:
+# In[249]:
 
 
 #Looks like some columns needs to be converted to numeric field
@@ -186,7 +191,7 @@ df_new['SNF'] = pd.to_numeric(df_new['SNF'], errors='coerce')
 df_new['TSHDSBRSGF'] = pd.to_numeric(df_new['TSHDSBRSGF'], errors='coerce')
 
 
-# In[24]:
+# In[250]:
 
 
 #Fill remaining null values. FOr the moment lts perform ffill
@@ -196,13 +201,13 @@ df_new.fillna(method='bfill', inplace=True)
 df_new.isnull().sum()
 
 
-# In[25]:
+# In[251]:
 
 
 df_new.dtypes
 
 
-# In[26]:
+# In[252]:
 
 
 #Plot couple of columns to see how the data is scaled
@@ -224,14 +229,14 @@ sb.distplot(df_new['MAX'], ax=ax[3][0])
 
 # #### CORRELATION
 
-# In[27]:
+# In[253]:
 
 
 pearsoncorr_new = df_new.corr(method='pearson')
 pearsoncorr_new
 
 
-# In[28]:
+# In[254]:
 
 
 plt.figure(figsize=(12, 10))
@@ -246,7 +251,7 @@ sb.heatmap(pearsoncorr_new,
            linewidth = 1)
 
 
-# In[29]:
+# In[255]:
 
 
 df_new.SND.value_counts()
@@ -260,14 +265,14 @@ df_new.SND.value_counts()
 
 # 1. Investigating a Linear Relationship
 
-# In[30]:
+# In[256]:
 
 
 plt.plot(df_new.MIN, df_new.MinTemp, '.', color='magenta');
 plt.title("Checking Linear Relationship MIN and MinTemp")
 
 
-# In[31]:
+# In[257]:
 
 
 plt.plot(df_new.MaxTemp, df_new.MinTemp, '.', color='green');
@@ -276,28 +281,28 @@ plt.title("Checking Linear Relationship MaxTemp and MinTemp")
 
 # 2. Variables should follow a Normal Distribution ############# WRONG! YOU JUST HAVE TO CHECK NORMALITY AFTER REGRESSION BECAUSE THE THING THAT HAS TO BE NORMAL IS THE ERROR! OMG HELLOOOO :)
 
-# In[ ]:
+# In[258]:
 
 
 stats.probplot(df_new.MinTemp, dist="norm", plot=plt)
 plt.show()
 
 
-# In[ ]:
+# In[259]:
 
 
 stats.probplot(df_new.MIN, dist="norm", plot=plt)
 plt.show()
 
 
-# In[ ]:
+# In[260]:
 
 
 stats.probplot(df_new.MaxTemp, dist="norm", plot=plt)
 plt.show()
 
 
-# In[ ]:
+# In[261]:
 
 
 # Anderson-Darling Test
@@ -316,7 +321,7 @@ for i in range(len(result.critical_values)):
         print('%.3f: %.3f, data does not look normal (reject H0)' % (sl, cv))
 
 
-# In[ ]:
+# In[262]:
 
 
 # Anderson-Darling Test
@@ -335,7 +340,7 @@ for i in range(len(result.critical_values)):
         print('%.3f: %.3f, data does not look normal (reject H0)' % (sl, cv))
 
 
-# In[ ]:
+# In[263]:
 
 
 # Anderson-Darling Test
@@ -352,11 +357,11 @@ for i in range(len(result.critical_values)):
         print('%.3f: %.3f, data does not look normal (reject H0)' % (sl, cv))
 
 
-# In[ ]:
+# In[264]:
 
 
 # Shapiro-Wilk Test:  the test may be suitable for smaller samples of data, e.g. thousands of observations or fewer.
-
+from scipy.stats import shapiro
 # normality test
 stat, p = shapiro(df_new.MinTemp)
 print('Statistics=%.3f, p=%.3f' % (stat, p))
@@ -369,7 +374,7 @@ else:
     print('Sample does not look Gaussian (reject H0)')
 
 
-# In[ ]:
+# In[265]:
 
 
 # D'Agostino and Pearson's Test
@@ -396,7 +401,7 @@ else:
 
 # ##### USING SCIKIT LEARN PACKAGE
 
-# In[32]:
+# In[266]:
 
 
 lr = LinearRegression()
@@ -405,32 +410,32 @@ x = df_new[['MIN','MaxTemp']] # here we have 2 variables for multiple regression
 x
 
 
-# In[33]:
+# In[267]:
 
 
 x.shape
 
 
-# In[34]:
+# In[268]:
 
 
 y = df.MinTemp.values.reshape(-1,1)
 y
 
 
-# In[35]:
+# In[269]:
 
 
 y.shape
 
 
-# In[36]:
+# In[270]:
 
 
 lr.fit(x,y)
 
 
-# In[37]:
+# In[271]:
 
 
 from sklearn.model_selection import train_test_split
@@ -443,119 +448,112 @@ a = lr.predict(x_test)
 a
 
 
-# In[38]:
+# In[272]:
 
 
 mean_absolute_error(a,y_test)
 
 
-# In[39]:
+# In[273]:
 
 
 x = sm.add_constant(x) # adding a constant
 x
 
 
-# In[40]:
+# In[274]:
 
 
 model = sm.OLS(y, x).fit()
 model
 
 
-# In[41]:
+# In[275]:
 
 
 predictions = model.predict(x) 
 predictions
 
 
-# In[42]:
+# In[276]:
 
 
 print(model.summary())
 
 
+# ### SPLIT DATA TRAIN AND TEST
+
+# In[281]:
+
+
+df_new=df_new.reset_index()
+sample=[]
+nrow=len(df.index)
+train=0.8
+datasample=df_new['index'].tolist()
+data_test=random.sample(datasample, int(nrow*train))
+df_test = pd.DataFrame({'index':data_test})
+df_train=pd.merge(df_test, df_new, how = 'left', left_on='index', right_on='index')
+df_test=df_new[(~df_new.index.isin(df_train.index))]
+
+
+# In[278]:
+
+
+df_train.info()
+
+
 # ##### MANUALLY
 
-# In[43]:
+# ### TRAIN DATA
+
+# In[306]:
 
 
-data1 = df_new[['MIN','MaxTemp','MinTemp']]
-data1
-
-
-# In[44]:
-
-
-#convert dataframe to numpy matrix
+data1 = df_train[['MIN','MaxTemp','MinTemp']]
 dataM = data1.as_matrix()
-dataM
-
-
-# In[45]:
-
-
 X_manual, y_manual = dataM[:,[1,2]], dataM[:,0]
-
-
-# In[46]:
-
-
-X_manual
-
-
-# In[47]:
-
-
-y_manual
-
-
-# In[48]:
-
-
 x0 = np.ones((len(X_manual), 1), dtype=int)
-x0
-
-
-# In[49]:
-
-
 x_manual = np.concatenate((x0, X_manual), axis=1)
-x_manual
-
-
-# In[50]:
-
-
 b = inv(x_manual.T.dot(x_manual)).dot(x_manual.T).dot(y_manual)
-b
-
-
-# In[51]:
-
+#b = np.linalg.solve(np.dot(x_manual.T, x_manual),np.dot(x_manual.T,y_manual))
 
 yhat = x_manual.dot(b)
-yhat
+
+#MSE
+error = y_manual-yhat
+e2=error**2
+mse=np.mean(e2)
+print("MSE: "+str(mse))
+
+#R SQUARE
+sumE = np.sum(e2)
+y_s = np.sum((y_manual-(np.mean(y_manual)*len(y_manual)))**2)
+R2=(1-(sumE/y_s))*100
+print('R-square: '+str(R2)+"%")
 
 
-# In[54]:
+# ### TEST DATA
+
+# In[312]:
 
 
-d1 = y_manual-yhat
-d1
+data1 = df_test[['MIN','MaxTemp','MinTemp']]
+dataM = data1.as_matrix()
+X_manual, y_manual = dataM[:,[1,2]], dataM[:,0]
+x0 = np.ones((len(X_manual), 1), dtype=int)
+x_manual = np.concatenate((x0, X_manual), axis=1)
+
+#MSE
+y_test=b.dot(x_manual.T)
+error=y_manual-y_test
+e2=error**2
+mse=np.mean(e2)
+print("MSE: "+str(mse))
 
 
-# In[55]:
+# In[ ]:
 
 
-d2 = y_manual - y_manual.mean()
-d2
 
-
-# In[56]:
-
-
-rsquared = 1 - d1.dot(d1) / d2.dot(d2)
-rsquared
 
