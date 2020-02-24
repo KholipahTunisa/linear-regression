@@ -478,14 +478,14 @@ print(model.summary())
 
 # ##### MANUALLY
 
-# In[55]:
+# In[43]:
 
 
 data1 = df_new[['MIN','MaxTemp','MinTemp']]
 data1
 
 
-# In[56]:
+# In[44]:
 
 
 #convert dataframe to numpy matrix
@@ -493,55 +493,69 @@ dataM = data1.as_matrix()
 dataM
 
 
-# In[57]:
+# In[45]:
 
 
 X_manual, y_manual = dataM[:,[1,2]], dataM[:,0]
 
 
-# In[58]:
+# In[46]:
 
 
 X_manual
 
 
-# In[59]:
+# In[47]:
 
 
 y_manual
 
 
-# In[60]:
+# In[48]:
 
 
 x0 = np.ones((len(X_manual), 1), dtype=int)
 x0
 
 
-# In[61]:
+# In[49]:
 
 
 x_manual = np.concatenate((x0, X_manual), axis=1)
 x_manual
 
 
-# In[62]:
+# In[50]:
 
 
 b = inv(x_manual.T.dot(x_manual)).dot(x_manual.T).dot(y_manual)
 b
 
 
-# In[63]:
+# In[51]:
 
 
 yhat = x_manual.dot(b)
 yhat
 
 
-# In[64]:
+# In[54]:
 
 
-error = y_manual-yhat
-error
+d1 = y_manual-yhat
+d1
+
+
+# In[55]:
+
+
+d2 = y_manual - y_manual.mean()
+d2
+
+
+# In[56]:
+
+
+rsquared = 1 - d1.dot(d1) / d2.dot(d2)
+rsquared
 
